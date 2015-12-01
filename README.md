@@ -1,5 +1,9 @@
 # Advent Of Code #
 
+My solutions for the Advent of Code. 
+
+[Advent of Code](https://github.com/Tw1stedL0gic/advent-of-code.git)
+
 ## About ##
 
 >"Your tenacity for making things that make other things so that people can make things is alarming." -a beta tester
@@ -16,4 +20,20 @@
 
 > Beta Testing: Tim Giannetti and Ben Lucek
 
-> [Advent of Code](https://github.com/Tw1stedL0gic/advent-of-code.git)
+# Days #
+
+## Day One - Not Quite Lisp ##
+[Door](http://adventofcode.com/day/1)
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/1)
+
+## Day Two ##
+
+## Day Three ##
+
+## Day Four ##
+
+## Day Five ##
+
+## Day Six ##
+
+## ... ##
