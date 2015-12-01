@@ -23,17 +23,30 @@ My solutions for the Advent of Code.
 # Days #
 
 ## Day One - Not Quite Lisp ##
+### Complete ###
+
+Language: Python
+
+Time to finish: ~5 minutes
+
 [Door](http://adventofcode.com/day/1)
+
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/1)
 
 ## Day Two ##
+### Not Yet Started ###
+
 
 ## Day Three ##
+### Not Yet Started ###
 
 ## Day Four ##
+### Not Yet Started ###
 
 ## Day Five ##
+### Not Yet Started ###
 
 ## Day Six ##
+### Not Yet Started ###
 
 ## ... ##
