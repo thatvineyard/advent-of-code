@@ -33,9 +33,16 @@ Time to finish: ~5 minutes
 
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/1)
 
-## Day Two ##
-### Not Yet Started ###
+## Day Two - I Was Told There Would Be No Math ##
+### Complete ###
 
+Language: Ruby
+
+Time to finish: 30 minutes
+
+[Door](http://adventofcode.com/day/2)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/2)
 
 ## Day Three ##
 ### Not Yet Started ###
