@@ -44,16 +44,62 @@ Time to finish: 30 minutes
 
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/2)
 
-## Day Three ##
+## Day Three - Perfectly Spherical Houses in a Vacuum  ##
 ### Not Yet Started ###
 
-## Day Four ##
+Language: Ruby
+
+Time to finish:
+
+[Door](http://adventofcode.com/day/3)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/3)
+
+## Day Four - The Ideal Stocking Stuffer ##
 ### Not Yet Started ###
+
+Language: C#
+
+[Door](http://adventofcode.com/day/4)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/4)
+
 
 ## Day Five ##
 ### Not Yet Started ###
 
+Language: JavaScript
+
+
+[Door](http://adventofcode.com/day/5)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/5)
+
 ## Day Six ##
 ### Not Yet Started ###
+
+Language: C++
+
+
+[Door](http://adventofcode.com/day/6)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/6)
+
+
+## Day Seven ##
+### Not Yet Started ###
+
+
+[Door](http://adventofcode.com/day/7)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/7)
+
+## Day Eight ##
+### Not Yet Started ###
+
+
+[Door](http://adventofcode.com/day/8)
+
+[Solution](https://github.com/Tw1stedL0gic/advent-of-code/8)
 
 ## ... ##
