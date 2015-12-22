@@ -56,9 +56,11 @@ Time to finish: 2hr
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/3)
 
 ## Day Four - The Ideal Stocking Stuffer ##
-### Not Yet Started ###
+### Complete ###
 
-Language: C#
+Language: Python
+
+Time to finish: 1hr
 
 [Door](http://adventofcode.com/day/4)
 
