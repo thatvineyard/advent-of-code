@@ -68,7 +68,7 @@ Time to finish: 1hr
 
 
 ## Day Five ##
-### Not Yet Started ###
+### Complete ###
 
 Language: Rust
 
@@ -79,10 +79,11 @@ Time to finish: 1.5hr
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/5)
 
 ## Day Six ##
-### Not Yet Started ###
+### Started ###
 
 Language: C++
 
+Time to finish: 1hr +++++
 
 [Door](http://adventofcode.com/day/6)
 
