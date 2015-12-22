@@ -45,11 +45,11 @@ Time to finish: 30 minutes
 [Solution](https://github.com/Tw1stedL0gic/advent-of-code/2)
 
 ## Day Three - Perfectly Spherical Houses in a Vacuum  ##
-### Not Yet Started ###
+### Complete ###
 
-Language: Ruby
+Language: Perl
 
-Time to finish:
+Time to finish: 2hr
 
 [Door](http://adventofcode.com/day/3)
 
