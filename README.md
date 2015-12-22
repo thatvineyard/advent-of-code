@@ -70,8 +70,9 @@ Time to finish: 1hr
 ## Day Five ##
 ### Not Yet Started ###
 
-Language: JavaScript
+Language: Rust
 
+Time to finish: 1.5hr
 
 [Door](http://adventofcode.com/day/5)
 
