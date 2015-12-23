@@ -6,18 +6,18 @@
 
 
 
-int how_many_are_on(bool light_matrix[X_MAX][Y_MAX]) {
+int how_bright_is_it(int light_matrix[X_MAX][Y_MAX]) {
   int count = 0;
   
   for(int x = 0; x < X_MAX; x++) {
     for(int y = 0; y < Y_MAX; y++) {
-      count += light_matrix[x][y] == true ? 1 : 0;
+      count += light_matrix[x][y];
     }
   }
   return count;
 }
 
-void execute_instruction(bool light_matrix[X_MAX][Y_MAX], std::string instruction) {
+void execute_instruction(int light_matrix[X_MAX][Y_MAX], std::string instruction) {
   int instruction_code = -1; // 0 = toggle, 1 = turn on, 2 = turn off
   
   int x_start = -1;
@@ -77,17 +77,15 @@ void execute_instruction(bool light_matrix[X_MAX][Y_MAX], std::string instructio
     for(int y = y_start; y <= y_end; y++) {
       switch(instruction_code) {
       case 0:
-	if(light_matrix[x][y] == true) {
-	  light_matrix[x][y] = false;
-	} else {
-	  light_matrix[x][y] = true;
-	} 
+	light_matrix[x][y] += 2; 
 	break;
       case 1:
-	light_matrix[x][y] = true;
+	light_matrix[x][y] += 1;
 	break;
       case 2:
-	light_matrix[x][y] = false;
+	if(light_matrix[x][y] > 0) {
+	  light_matrix[x][y] -= 1;
+	}
 	break;
       default:
 	break;
@@ -96,21 +94,21 @@ void execute_instruction(bool light_matrix[X_MAX][Y_MAX], std::string instructio
   }
 }
 
-void print_matrix(bool matrix[X_MAX][Y_MAX]) {
+void print_matrix(int matrix[X_MAX][Y_MAX]) {
   for(int x = 0; x < X_MAX; x++) {
     for(int y = 0; y < Y_MAX; y++) {
-      printf("%d,%d: %s\n", x, y, matrix[x][y] == true ? "true" : "false");
+      printf("%d,%d: %d\n", x, y, matrix[x][y]);
     }
   }
 }
 
 int main() {
 
-  bool light_matrix[X_MAX][Y_MAX];
+  int light_matrix[X_MAX][Y_MAX];
 
   for(int x = 0; x < X_MAX; x++) {
     for(int y = 0; y < Y_MAX; y++) {
-      light_matrix[x][y] = false;
+      light_matrix[x][y] = 0;
     }
   }
   
@@ -123,7 +121,7 @@ int main() {
     }
   }
 
-  printf("%d lights are on!\n", how_many_are_on(light_matrix));
+  printf("It's this bright: %d!\n", how_bright_is_it(light_matrix));
 
   return 1;
 }
