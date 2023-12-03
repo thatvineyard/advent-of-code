@@ -1,3 +1,7 @@
+from functools import reduce
+import math
+
+
 mode = ""
 
 if mode == "test":
@@ -11,13 +15,8 @@ else:
 
 game_results = input.split('\n')
 
-max_die_amonuts = {
-    "red": 12,
-    "green": 13,
-    "blue": 14
-}
 
-id_sum = 0
+product_sum = 0
 
 for i, game_result in enumerate(game_results):
     if game_result == "":
@@ -32,7 +31,11 @@ for i, game_result in enumerate(game_results):
     rounds=game_output.strip().split(";")
     rounds=map(lambda text: text.strip(), rounds)
     
-    game_failed = False
+    min_die_amounts = {
+        "red": 0,
+        "green": 0,
+        "blue": 0
+    }
 
     for round in rounds:
         die_amounts = round.split(",")
@@ -41,11 +44,11 @@ for i, game_result in enumerate(game_results):
         for dice_amount in die_amounts:
             [number, color] = dice_amount.split(" ")
             number = int(number)
-            if(number > max_die_amonuts[color]):
-                game_failed = True
-        
-    if not game_failed:
-        id_sum += game_id
+            if(number > min_die_amounts[color]):
+                min_die_amounts[color] = number
+
+    set_power = reduce(lambda amount, product: amount * product, min_die_amounts.values(), 1)
+    product_sum += set_power
 
 print()
 print("Done!")
@@ -53,9 +56,9 @@ print("Done!")
 # Test
         
 if mode == "test":
-    if id_sum == test_answer:
+    if product_sum == test_answer:
         print("✅")
     else:
         print("❌")
 else:
-    print(id_sum)
+    print(product_sum)
