@@ -26,6 +26,8 @@ answer = ""
 
 #####
 
+print()
+print("RESULT")
 if test_mode:
     if answer == test_answer:
         print("✅ ", end='')
