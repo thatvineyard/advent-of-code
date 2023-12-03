@@ -28,7 +28,7 @@ else:
 
 digit_regex="[0-9]"
 number_regex="[0-9]+"
-symbol_regex="[^0-9\.]"
+symbol_regex="[*]"
 
 Coordinate = collections.namedtuple('coord', ['line', 'col'])
 
@@ -43,16 +43,17 @@ for line_index, line in enumerate(lines):
     print(".", end="")
     active_cells.append([False for i in range(len(line))])
     
-    digits = re.finditer(symbol_regex, line)
-    for digit in digits:
-        if digit.end() - digit.start() > 1:
-            raise Exception(f'Regex should only have found one character but found "{digit.group()}"')
+    numbers = re.finditer(symbol_regex, line)
+    for number in numbers:
+        if number.end() - number.start() > 1:
+            raise Exception(f'Regex should only have found one character but found "{number.group()}"')
 
-        symbol_coordinates.append(Coordinate(line_index,digit.start()))
+        symbol_coordinates.append(Coordinate(line_index,number.start()))
 
 print()
 
 print("Targeting cells around symbols", end="")
+sum = 0
 for symbol_coordinate in symbol_coordinates:
     print(".", end="")
     min_line_index=max(0, min(symbol_coordinate.line - 1, len(lines)))
@@ -60,39 +61,37 @@ for symbol_coordinate in symbol_coordinates:
 
     selected_lines = lines[min_line_index:max_line_index]
 
+    found_number_start_coords: list[Coordinate] = []
+    number_of_numbers_found = 0
+
     for line_index, line in enumerate(selected_lines):
         min_col_index=max(0, min(symbol_coordinate.col - 1, len(line)))
         max_col_index=max(0, min(symbol_coordinate.col + 2, len(line)))
 
         selected_cols=line[min_col_index:max_col_index]
         
-        digits = re.finditer(digit_regex, selected_cols)
-        for digit in digits:
-            if digit.end() - digit.start() > 1:
-                raise Exception(f'Regex should only have found one number but found "{digit.group()}"')
-            digit_coordinate = Coordinate(line_index + min_line_index, digit.start() + min_col_index)
+        numbers = re.finditer(number_regex, selected_cols)
+        for number in numbers:
+            number_of_numbers_found += 1
+            digit_coordinate = Coordinate(line_index + min_line_index, number.start() + min_col_index)
             digit_in_input = lines[digit_coordinate.line][digit_coordinate.col]
-            if digit.group() != digit_in_input:
-                raise Exception(f'Found number "{digit.group()}" did not match number found in input string ({digit.group()}) at that coordinate ({digit_coordinate})')
 
-            active_cells[digit_coordinate.line][digit_coordinate.col] = True
-print()
-
-print("Summing targeted cells: ", end='')
-sum = 0
-for line_index, line in enumerate(lines):
+            found_number_start_coords.append(digit_coordinate)
     
-    numbers = re.finditer(number_regex, line)
-    for number in numbers:
-        active=False
-        for number_col_index in range(number.start(), number.end()):
-            if active_cells[line_index][number_col_index]:
-                active=True
-                continue
-        if active:
-            number = int(number.group())
-            print(f'{number}, ', end='')
-            sum += number
+    if len(found_number_start_coords) == 2:
+
+        product=1
+
+        for found_number_start_coord in found_number_start_coords:
+            line_starting_at_number = lines[found_number_start_coord.line]
+            numbers = list(re.finditer(f'{number_regex}', line_starting_at_number))
+            if len(numbers) == 0:
+                raise Exception(f'Could not find number at beginning of string ({line_starting_at_number})')
+            for number in numbers:
+                if number.start() <= found_number_start_coord.col and number.end() >= found_number_start_coord.col:
+                    product *= int(number.group())
+
+        sum += product
 print()
 
 
@@ -100,6 +99,7 @@ answer = sum
 
 #####
 
+print("\nRESULT: ")
 if test_mode:
     if answer == test_answer:
         print("✅ ", end='')
