@@ -44,17 +44,24 @@ def get_race(race: tuple[int | int]):
 
 (time_string, distance_string, _) = input.split('\n')
 
-times = map(lambda string: int(string), time_string.split()[1:])
-distances = map(lambda string: int(string), distance_string.split()[1:])
+# Part 1 
+# times = map(lambda string: int(string), time_string.split()[1:])
+# distances = map(lambda string: int(string), distance_string.split()[1:])
 
-races = zip(times, distances)
+# races = zip(times, distances)
 
-product = 1
+# product = 1
 
-for race in races:
-    product *= get_race(race)
+# for race in races:
+#     product *= get_race(race)
 
-answer = product
+# answer = product
+
+# Part 2
+time = int(time_string.split(':')[1].replace(" ", ""))
+distance = int(distance_string.split(':')[1].replace(" ", ""))
+
+answer = get_race((time, distance))
 
 #####
 
