@@ -1,0 +1,4 @@
+advent-of-code-data
+inquirer
+python-dotenv
+markdownify
