@@ -1,6 +1,7 @@
 
 
-from datetime import date
+import argparse
+from datetime import date, datetime
 import os
 import sys
 
@@ -10,21 +11,28 @@ import dotenv
 import markdownify
 
 
+parser = argparse.ArgumentParser("Advent of Code Setupper")
+parser.add_argument("-d", "--date", required=False)
+args = parser.parse_args()
+
 dotenv.load_dotenv()
 
-today = date.today().timetuple()[0:3]
+if args.date:
+  setup_date = datetime.strptime(args.date, '%Y-%m-%d').date().timetuple()[0:3]
+else:
+  setup_date = date.today().timetuple()[0:3]
 
 def get_year_dir(date: tuple[int | int | int]):
   (year, _, _) = date
-  return os.path.join(str(year + 1))
+  return os.path.join(str(year))
 
 def get_date_dir(date: tuple[int | int | int]):
   (_, _, day) = date
   return os.path.join(get_year_dir(date), str(day))
 
-def set_up_directory(today: tuple[int | int | int]):
-  (year, month, day) = today
-  this_years_path = get_year_dir(today)
+def set_up_directory(date: tuple[int | int | int]):
+  (year, month, day) = date
+  this_years_path = get_year_dir(date)
 
   if not os.path.isdir(this_years_path):
     if not inquirer.confirm(f"Create directory {this_years_path}{os.path.sep}?"):
@@ -37,14 +45,14 @@ def set_up_directory(today: tuple[int | int | int]):
     print(f"Not december yet, come back in {(date(year, 12, 1) - date(year, month, day)).days} days 👋")
     sys.exit()
 
-  todays_path = get_date_dir(today)
+  date_path = get_date_dir(date)
 
-  if not os.path.isdir(todays_path):
-    if not inquirer.confirm(f"Create directory {todays_path}{os.path.sep}?"):
+  if not os.path.isdir(date_path):
+    if not inquirer.confirm(f"Create directory {date_path}{os.path.sep}?"):
       print("Goodbye 👋")
       sys.exit()
     
-    os.mkdir(todays_path)
+    os.mkdir(date_path)
 
 def check_and_inquire_overwrite_file(file_path, data, double_check: bool = False):
   if os.path.isfile(file_path):
@@ -65,9 +73,10 @@ def write_file_in_date_folder(date, file_name, data):
   file_path = os.path.join(date_dir, file_name)
 
   if check_and_inquire_overwrite_file(file_path, data):  
-    file = open(file_path, "w")
-    file.write(data)
-    file.close()
+    if file_path and data:
+      file = open(file_path, "w")
+      file.write(data)
+      file.close()
 
 def load_data_from_aoc(date: tuple[int | int | int]):
   (year, _, day) = date
@@ -133,6 +142,6 @@ def copy_template_to_date_folder(date: tuple[int | int | int]):
       new_file.close()
 
   
-set_up_directory(today)
-load_data_from_aoc(today)
-copy_template_to_date_folder(today)
+set_up_directory(setup_date)
+load_data_from_aoc(setup_date)
+copy_template_to_date_folder(setup_date)
