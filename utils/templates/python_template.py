@@ -15,12 +15,18 @@ test_input_file = open(file=os.path.join(dir, "./test_input.txt"), mode="r")
 test_input = test_input_file.read()
 test_input_file.close()
 
-test_answer_a_file = open(file=os.path.join(dir, "./test_answer_a.txt"), mode="r")
-test_answer_a_content = test_answer_a_file.read()
-test_answer_a_file.close()
-test_answer_b_file = open(file=os.path.join(dir, "./test_answer_b.txt"), mode="r")
-test_answer_b_content = test_answer_b_file.read()
-test_answer_b_file.close()
+if os.path.isfile(os.path.join(dir, "test_answer_a.txt")):
+  test_answer_a_file = open(file=os.path.join(dir, "test_answer_a.txt"), mode="r")
+  test_answer_a_content = test_answer_a_file.read()
+  test_answer_a_file.close()
+else:
+   test_answer_a_content = ""
+if os.path.isfile(os.path.join(dir, "test_answer_b.txt")):
+  test_answer_b_file = open(file=os.path.join(dir, "test_answer_b.txt"), mode="r")
+  test_answer_b_content = test_answer_b_file.read()
+  test_answer_b_file.close()
+else:
+   test_answer_b_content = ""
 
 if test_answer_a_content != "":
   test_answer_a = int(test_answer_a_content)
