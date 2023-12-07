@@ -14,9 +14,17 @@ dotenv.load_dotenv()
 
 today = date.today().timetuple()[0:3]
 
+def get_year_dir(date: tuple[int | int | int]):
+  (year, _, _) = date
+  return os.path.join(str(year + 1))
+
+def get_date_dir(date: tuple[int | int | int]):
+  (_, _, day) = date
+  return os.path.join(get_year_dir(date), str(day))
+
 def set_up_directory(today: tuple[int | int | int]):
   (year, month, day) = today
-  this_years_path = os.path.join(str(year))
+  this_years_path = get_year_dir(today)
 
   if not os.path.isdir(this_years_path):
     if not inquirer.confirm(f"Create directory {this_years_path}{os.path.sep}?"):
@@ -29,7 +37,7 @@ def set_up_directory(today: tuple[int | int | int]):
     print(f"Not december yet, come back in {(date(year, 12, 1) - date(year, month, day)).days} days 👋")
     sys.exit()
 
-  todays_path = os.path.join(this_years_path, str(day))
+  todays_path = get_date_dir(today)
 
   if not os.path.isdir(todays_path):
     if not inquirer.confirm(f"Create directory {todays_path}{os.path.sep}?"):
@@ -53,8 +61,7 @@ def check_and_inquire_overwrite_file(file_path, data, double_check: bool = False
   return True
 
 def write_file_in_date_folder(date, file_name, data):
-  (year, month, day) = date
-  date_dir = os.path.join(str(year), str(day))
+  date_dir = get_date_dir(date)
   file_path = os.path.join(date_dir, file_name)
 
   if check_and_inquire_overwrite_file(file_path, data):  
@@ -63,7 +70,7 @@ def write_file_in_date_folder(date, file_name, data):
     file.close()
 
 def load_data_from_aoc(date: tuple[int | int | int]):
-  (year, month, day) = date
+  (year, _, day) = date
   try:
     puzzle = aocd.models.Puzzle(year=year, day=day)
   except (aocd.exceptions.DeadTokenError, aocd.exceptions.AocdError):
@@ -73,26 +80,31 @@ def load_data_from_aoc(date: tuple[int | int | int]):
 
   # Instructions
   prose = puzzle._get_prose()
-  article = prose[prose.find("<article"):prose.find("</article>") + len("</article>")]
-  cleaned_article = markdownify.markdownify(article, heading_style="ATX")
+  article_a = prose[prose.find("<article"):prose.find("</article>") + len("</article>")]
+  prose = prose[prose.find("</article>") + len("</article>"):]
+  article_b = prose[prose.find("<article"):prose.find("</article>") + len("</article>")]
+  cleaned_article = markdownify.markdownify(article_a + article_b, heading_style="ATX")
   write_file_in_date_folder(date, "README.md", cleaned_article)
   write_file_in_date_folder(date, "NOTES.md", "# Notes")
   
   # Examples
   if puzzle.examples:
     for i, example in enumerate(puzzle.examples):
-      write_file_in_date_folder(date, f"test_input_{i}.txt", example.input_data)
-      write_file_in_date_folder(date, f"test_answer_a_{i}.txt", example.answer_a)
-      if example.answer_b:
-        write_file_in_date_folder(date, f"test_input_b_{i}.txt", example.answer_b)
+      if i == 0:
+        postfix = ""
+      else:
+        postfix = f"_extra_{i}"
+      write_file_in_date_folder(date, f"test_input{postfix}.txt", example.input_data)
+      write_file_in_date_folder(date, f"test_answer_a{postfix}.txt", example.answer_a)
+      write_file_in_date_folder(date, f"test_answer_b{postfix}.txt", example.answer_b)
 
   write_file_in_date_folder(date, "input.txt", puzzle.input_data)
 
 
 def copy_template_to_date_folder(date: tuple[int | int | int]):
-  (year, month, day) = date
+  (_, _, day) = date
 
-  date_dir = os.path.join(str(year), str(day))
+  date_dir = get_date_dir(date)
   if not inquirer.confirm(f"Create template in {date_dir}?"):
     return
 
