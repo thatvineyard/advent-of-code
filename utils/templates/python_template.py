@@ -2,10 +2,13 @@
 # If nodemon is installed, run using nodemon.cmd --exec py <path to file> -t
 
 import os
-import sys
 
 import aocd
+import dotenv
 import inquirer
+
+dotenv.load_dotenv()
+
 dir = os.path.dirname(__file__)
 
 test_input_file = open(file=os.path.join(dir, "./test_input.txt"), mode="r")
@@ -77,7 +80,7 @@ if test_result_b == test_answer_b:
 
     if inquirer.confirm(f"Submit result ({result})?"):
        [year, day] = os.path.dirname(__file__).split(os.path.sep)[-2:]
-       aocd.submit(int(result), part="b", day=day, year=year)
+       aocd.submit(int(result), part="b", day=int(day), year=int(year))
 
 if test_result_a == test_answer_a:
   if inquirer.confirm("Test succeeded on one part a, run on real data?"):
