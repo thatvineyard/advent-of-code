@@ -11,36 +11,21 @@ dotenv.load_dotenv()
 
 dir = os.path.dirname(__file__)
 
-test_input_file = open(file=os.path.join(dir, "./test_input.txt"), mode="r")
-test_input = test_input_file.read()
-test_input_file.close()
-
-if os.path.isfile(os.path.join(dir, "test_answer_a.txt")):
-  test_answer_a_file = open(file=os.path.join(dir, "test_answer_a.txt"), mode="r")
-  test_answer_a_content = test_answer_a_file.read()
-  test_answer_a_file.close()
-else:
-   test_answer_a_content = ""
-if os.path.isfile(os.path.join(dir, "test_answer_b.txt")):
-  test_answer_b_file = open(file=os.path.join(dir, "test_answer_b.txt"), mode="r")
-  test_answer_b_content = test_answer_b_file.read()
-  test_answer_b_file.close()
-else:
-   test_answer_b_content = ""
-
-if test_answer_a_content != "":
-  test_answer_a = int(test_answer_a_content)
-else:
-   test_answer_a = 0
-
-if test_answer_b_content != "":
-  test_answer_b = int(test_answer_b_content)
-else:
-   test_answer_b = 0
-
-input_file = open(file=os.path.join(dir, "input.txt"), mode="r")
-input = input_file.read()
-input_file.close()
+def try_get_multiple_file_contents(*filenames: list[str]):
+  result = []
+  for filename in filenames:
+    path = os.path.join(dir, filename)
+    if os.path.isfile(path):
+      file = open(file=path, mode="r")
+      content = file.read()
+      file.close()
+    else:
+      content = ""
+    result.append(content)
+  return result
+     
+   
+[input, test_input, test_answer_a, test_answer_b] = try_get_multiple_file_contents("input.txt", "test_input.txt", "test_answer_a.txt", "test_answer_b.txt")
 
 #####
 
@@ -49,34 +34,27 @@ def get_result(input: str, part_b: bool = False):
 
 #####
 
-print("RUNNING TEST")
+def check_result(result: str, answer: str):
+  if answer == "":
+    print("⏹ ")
+  else:
+    if str(result) == answer:
+        print(f"🟩 {result}")
+        return True
+    if str(result) != answer:
+        print(f"🟥 {result} (expected {answer})")
+  return False
+
+print("-- TEST A --")
 test_result_a = get_result(test_input)
+test_a_success = check_result(test_result_a, test_answer_a)
+print("---")
+print("-- TEST B --")
 test_result_b = get_result(test_input, True)
+test_b_success = check_result(test_result_b, test_answer_b)
+print("---")
 
-print("TEST RESULTS")
-print("Part A ", end='')
-if test_answer_a == 0:
-    print("⏹ ", end="")
-else:
-  if test_result_a == test_answer_a:
-      print("🟩", end="")
-  if test_result_a != test_answer_a:
-      print("🟥", end="")
-print(": ", end="")
-print(test_result_a)
-
-print("Part B ", end='')
-if test_answer_b == 0:
-    print("⏹ ", end="")
-else: 
-  if test_result_b == test_answer_b:
-      print("🟩", end="")
-  if test_result_b != test_answer_b:
-      print("🟥", end="")
-print(": ", end="")
-print(test_result_b)
-
-if test_result_b == test_answer_b:
+if test_b_success:
   if inquirer.confirm("Test succeeded on one part b, run on real data?"):
     print("RUNNING PART B")
     result = get_result(input, True)
@@ -88,7 +66,7 @@ if test_result_b == test_answer_b:
        [year, day] = os.path.dirname(__file__).split(os.path.sep)[-2:]
        aocd.submit(int(result), part="b", day=int(day), year=int(year))
 
-if test_result_a == test_answer_a:
+if test_a_success:
   if inquirer.confirm("Test succeeded on one part a, run on real data?"):
     print("RUNNING PART A")
     result = get_result(input)
