@@ -1,9 +1,8 @@
 # Create files called input.txt, test_input.txt and test_answer.txt
 # If nodemon is installed, run using nodemon.cmd --exec py <path to file> -t
 
+from functools import reduce
 import os
-import re
-import sys
 
 import aocd
 import dotenv
@@ -58,7 +57,10 @@ def get_result(input: str, part_b: bool = False):
     
     sorted_result = sorted(result.values(), reverse=True)
     
-    return sorted_result[0]
+    if not part_b:
+      return sorted_result[0]
+    else:
+       return reduce(lambda x, y: x + y, sorted_result[:3])
       
 
 #####
@@ -100,7 +102,7 @@ if test_result_b == test_answer_b:
 
     if inquirer.confirm(f"Submit result ({result})?"):
        [year, day] = os.path.dirname(__file__).split(os.path.sep)[-2:]
-       aocd.submit(int(result), part="b", day=day, year=year)
+       aocd.submit(int(result), part="b", day=int(day), year=int(year))
 
 if test_result_a == test_answer_a:
   if inquirer.confirm("Test succeeded on one part a, run on real data?"):
