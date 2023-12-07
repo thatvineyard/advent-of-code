@@ -13,9 +13,9 @@ args = parser.parse_args()
 test_mode = args.test
 
 if test_mode:
-    test_input_file = open(file=os.path.join(dir, "./test_input_0.txt"), mode="r")
+    test_input_file = open(file=os.path.join(dir, "./test_input.txt"), mode="r")
     # test_answer_file_a = open(file=os.path.join(dir, "./test_answer_a_0.txt"), mode="r")
-    test_answer_file_b = open(file=os.path.join(dir, "./test_answer_b_0.txt"), mode="r")
+    test_answer_file_b = open(file=os.path.join(dir, "./test_answer_b.txt"), mode="r")
     input = test_input_file.read()
     # test_answer = int(test_answer_file_a.read())
     test_answer = int(test_answer_file_b.read())
