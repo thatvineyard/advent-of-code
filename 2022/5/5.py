@@ -30,7 +30,53 @@ def try_get_multiple_file_contents(*filenames: list[str]):
 #####
 
 def get_result(input: str, part_b: bool = False):
-    return ""
+    
+    [starting_schematic, instructions] = input.split("\n\n")
+
+    column_names = starting_schematic.split('\n')[-1:][0].split('  ')
+    column_specs = starting_schematic.split('\n')[:-1]
+
+    columns = []
+    for _ in column_names:
+       columns.append([])
+
+    for column_spec in column_specs[::-1]:
+      for column_number in column_names:
+          string_index = int(column_number) * 4 - 3
+          container = column_spec[string_index]
+          if container == " ":
+           continue
+          columns[int(column_number) - 1].append(container)
+
+    for i, column in enumerate(columns):
+       column_number = i + 1
+
+    for instruction in instructions.split('\n'):
+       [_, amount, _, from_column, _, to_column] = instruction.split(' ')
+
+       if not part_b:
+        for _ in range(0, int(amount)):
+              container = columns[int(from_column) - 1].pop()
+              columns[int(to_column) -1].append(container)
+       else:
+          print("---")
+          print(columns[int(from_column) - 1])
+          print(columns[int(to_column) - 1])
+          print(amount)
+          containers = columns[int(from_column) - 1][-int(amount):]
+          columns[int(from_column) - 1] = columns[int(from_column) - 1][:-int(amount)]
+          columns[int(to_column) - 1] += containers
+          print(columns[int(from_column) - 1])
+          print(columns[int(to_column) - 1])
+          print("---")
+    
+    answer = ""
+    for i, column in enumerate(columns):
+       answer += columns[i][-1:][0]
+
+    return answer
+
+
 
 #####
 
@@ -64,7 +110,7 @@ if test_b_success:
 
     if inquirer.confirm(f"Submit result ({result})?"):
        [year, day] = os.path.dirname(__file__).split(os.path.sep)[-2:]
-       aocd.submit(int(result), part="b", day=int(day), year=int(year))
+       aocd.submit(result, part="b", day=int(day), year=int(year))
 
 if test_a_success:
   if inquirer.confirm("Test succeeded on one part a, run on real data?"):
