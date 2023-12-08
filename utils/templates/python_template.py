@@ -64,7 +64,7 @@ if test_b_success:
 
     if inquirer.confirm(f"Submit result ({result})?"):
        [year, day] = os.path.dirname(__file__).split(os.path.sep)[-2:]
-       aocd.submit(int(result), part="b", day=int(day), year=int(year))
+       aocd.submit(result, part="b", day=int(day), year=int(year))
 
 if test_a_success:
   if inquirer.confirm("Test succeeded on one part a, run on real data?"):
