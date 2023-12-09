@@ -2,11 +2,13 @@
 # If nodemon is installed, run using nodemon.cmd --exec py <path to file> -t
 
 from logging import getLevelName
+import math
 import os
 
 import aocd
 import dotenv
 import inquirer
+
 
 dotenv.load_dotenv()
 
@@ -103,7 +105,7 @@ def get_result(input: str, part_b: bool = False):
 
     nodes: dict[str | Node] = {}
 
-    current_nodes = []
+    starting_nodes = []
 
     for network_path in network_paths.split('\n'):
        (name, destinations) = network_path.split(' = ')
@@ -114,15 +116,15 @@ def get_result(input: str, part_b: bool = False):
 
        nodes[name] = Node(name, destinations[0], destinations[1])
        if name[2] == "A":
-         current_nodes.append(nodes[name])
+         starting_nodes.append(nodes[name])
 
     current_instructions = instructions
 
     if not part_b:
       steps = 0
-      current_node: Node = nodes[start]
+      starting_node: Node = nodes[start]
 
-      while current_node.name != goal:
+      while starting_node.name != goal:
         steps += 1
 
         if current_instructions == "":
@@ -131,15 +133,17 @@ def get_result(input: str, part_b: bool = False):
         # print(f"{current_node} - {current_instructions[0]} ({len(current_instructions)})")
         current_instruction = current_instructions[0]
         current_instructions = current_instructions[1:]
-        current_node = current_node.traverse(current_instruction, nodes)
+        starting_node = starting_node.traverse(current_instruction, nodes)
       
       return steps
     
     else:
-      steps = {}
-      print(current_nodes)
-      for current_node in current_nodes:
-        while current_node.name[3] != goal:
+      steps_until_solved = {}
+      print(starting_nodes)
+      for starting_node in starting_nodes:
+        current_node = starting_node
+        steps = 0
+        while current_node.name[2] != "Z":
           steps += 1
 
           if current_instructions == "":
@@ -150,9 +154,13 @@ def get_result(input: str, part_b: bool = False):
           current_instructions = current_instructions[1:]
           current_node = current_node.traverse(current_instruction, nodes)
         
-        
+        steps_until_solved[starting_node] = steps
       
-      return steps
+      
+      result = math.lcm(*steps_until_solved.values())
+      print(f"{result} - {steps_until_solved.values()}")
+
+      return result
 
       
 
