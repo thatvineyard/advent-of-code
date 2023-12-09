@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 def get_date() -> tuple[int, int, int]:
     if not args.date:
-        return datetime.date.today().timetuple()[0:3]
+        return datetime.today().timetuple()[0:3]
 
     return datetime.strptime(args.date, "%Y-%m-%d").date().timetuple()[0:3]
 
