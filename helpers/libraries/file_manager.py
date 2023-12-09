@@ -1,8 +1,17 @@
+from datetime import date
+from genericpath import isdir
 import os
+import sys
 from typing import Callable
 
 
 # DIRECTORY
+
+
+def quit_if_dir_missing(dir_path: str, message: str):
+    if not os.path.isdir(dir_path):
+        print(message)
+        sys.exit(0)
 
 
 def get_year_dir(date: tuple[int | int | int]):
@@ -13,6 +22,37 @@ def get_year_dir(date: tuple[int | int | int]):
 def get_date_dir(date: tuple[int | int | int]):
     (_, _, day) = date
     return os.path.join(get_year_dir(date), str(day))
+
+
+def set_up_year_directory(
+    forDate: tuple[int | int | int], confirm: Callable[[str], bool]
+):
+    this_years_path = get_year_dir(forDate)
+
+    if not os.path.isdir(this_years_path):
+        if not confirm(this_years_path):
+            return
+
+        os.mkdir(this_years_path)
+
+
+def set_up_day_directory(
+    forDate: tuple[int | int | int], confirm: Callable[[str], bool]
+):
+    (year, month, day) = forDate
+    if month != 12:
+        print(
+            f"Not december yet, come back in {(date(year, 12, 1) - date(year, month, day)).days} days 👋"
+        )
+        return
+
+    date_path = get_date_dir(forDate)
+
+    if not os.path.isdir(date_path):
+        if not confirm(date_path):
+            return
+
+        os.mkdir(date_path)
 
 
 # TEMPLATES

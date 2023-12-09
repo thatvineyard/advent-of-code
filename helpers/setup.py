@@ -1,5 +1,4 @@
 import argparse
-from datetime import date, datetime
 import os
 import sys
 
@@ -17,41 +16,26 @@ args = parser.parse_args()
 
 dotenv.load_dotenv()
 
-if args.date:
-    setup_date = datetime.strptime(args.date, "%Y-%m-%d").date().timetuple()[0:3]
-else:
-    setup_date = date.today().timetuple()[0:3]
+
+def set_up_directory(for_date: tuple[int | int | int]):
+    file_manager.set_up_year_directory(
+        for_date, lambda path: inquirer.confirm(f"Create directory {path}?")
+    )
+    file_manager.quit_if_dir_missing(
+        file_manager.get_year_dir(for_date),
+        "Can't continue without year directory. Quitting",
+    )
+    file_manager.set_up_day_directory(
+        for_date, lambda path: inquirer.confirm(f"Create directory {path}?")
+    )
+    file_manager.quit_if_dir_missing(
+        file_manager.get_date_dir(for_date),
+        "Can't continue without date directory. Quitting",
+    )
 
 
-def set_up_directory(forDate: tuple[int | int | int]):
-    (year, month, day) = forDate
-    this_years_path = file_manager.get_year_dir(forDate)
-
-    if not os.path.isdir(this_years_path):
-        if not inquirer.confirm(f"Create directory {this_years_path}{os.path.sep}?"):
-            print("Goodbye 👋")
-            sys.exit()
-
-        os.mkdir(this_years_path)
-
-    if month != 12:
-        print(
-            f"Not december yet, come back in {(date(year, 12, 1) - date(year, month, day)).days} days 👋"
-        )
-        sys.exit()
-
-    date_path = file_manager.get_date_dir(forDate)
-
-    if not os.path.isdir(date_path):
-        if not inquirer.confirm(f"Create directory {date_path}{os.path.sep}?"):
-            print("Goodbye 👋")
-            sys.exit()
-
-        os.mkdir(date_path)
-
-
-def load_data_from_aoc(date: tuple[int | int | int]):
-    (year, _, day) = date
+def load_data_from_aoc(for_date: tuple[int | int | int]):
+    (year, _, day) = for_date
     try:
         puzzle = aocd.models.Puzzle(year=year, day=day)
     except (aocd.exceptions.DeadTokenError, aocd.exceptions.AocdError):
@@ -73,10 +57,10 @@ def load_data_from_aoc(date: tuple[int | int | int]):
         article_a + article_b, heading_style="ATX"
     )
     file_manager.write_file_in_date_folder(
-        date, "README.md", cleaned_article, cli.check_and_inquire_overwrite_file
+        for_date, "README.md", cleaned_article, cli.check_and_inquire_overwrite_file
     )
     file_manager.write_file_in_date_folder(
-        date, "NOTES.md", "# Notes", cli.check_and_inquire_overwrite_file
+        for_date, "NOTES.md", "# Notes", cli.check_and_inquire_overwrite_file
     )
 
     # Examples
@@ -88,28 +72,28 @@ def load_data_from_aoc(date: tuple[int | int | int]):
                 postfix = f"_extra_{i}"
             if example.input_data:
                 file_manager.write_file_in_date_folder(
-                    date,
+                    for_date,
                     f"test_input{postfix}.txt",
                     example.input_data,
                     cli.check_and_inquire_overwrite_file,
                 )
             if example.answer_a:
                 file_manager.write_file_in_date_folder(
-                    date,
+                    for_date,
                     f"test_answer_a{postfix}.txt",
                     example.answer_a,
                     cli.check_and_inquire_overwrite_file,
                 )
             if example.answer_b:
                 file_manager.write_file_in_date_folder(
-                    date,
+                    for_date,
                     f"test_answer_b{postfix}.txt",
                     example.answer_b,
                     cli.check_and_inquire_overwrite_file,
                 )
 
     file_manager.write_file_in_date_folder(
-        date,
+        for_date,
         "input.txt",
         puzzle.input_data,
         cli.check_and_inquire_overwrite_file,
@@ -140,6 +124,8 @@ def copy_template_to_date_folder(date: tuple[int | int | int]):
         cli.check_and_inquire_overwrite_file,
     )
 
+
+setup_date = cli.get_date()
 
 set_up_directory(setup_date)
 load_data_from_aoc(setup_date)

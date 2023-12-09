@@ -1,4 +1,27 @@
+import argparse
+from datetime import datetime
+import dotenv
 import inquirer
+
+# ARGS
+
+parser = argparse.ArgumentParser("Advent of Code Setupper")
+parser.add_argument("-d", "--date", required=False)
+args = parser.parse_args()
+
+
+def get_date() -> tuple[int, int, int]:
+    if not args.date:
+        return datetime.date.today().timetuple()[0:3]
+
+    return datetime.strptime(args.date, "%Y-%m-%d").date().timetuple()[0:3]
+
+
+# ENV
+
+dotenv.load_dotenv()
+
+# PROMPTS
 
 
 def check_and_inquire_overwrite_file(file_path: str):
