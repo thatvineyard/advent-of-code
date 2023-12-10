@@ -28,8 +28,18 @@ def try_get_multiple_file_contents(*filenames: list[str]):
     return result
 
 
-[input, test_input, test_answer_a, test_answer_b] = try_get_multiple_file_contents(
-    "input.txt", "test_input.txt", "test_answer_a.txt", "test_answer_b.txt"
+[
+    input,
+    test_input,
+    test_answer_a,
+    test_input_b,
+    test_answer_b,
+] = try_get_multiple_file_contents(
+    "input.txt",
+    "test_input.txt",
+    "test_answer_a.txt",
+    "test_input_b.txt",
+    "test_answer_b.txt",
 )
 
 #####
@@ -81,6 +91,9 @@ class PipeMap:
 
     def get_char_at_coordinate(self, coordinate: Coordinate):
         return self.content[coordinate.x][coordinate.y]
+
+    def set_char_at_coordinate(self, coordinate: Coordinate, char: str):
+        self.content[coordinate.x][coordinate.y] = char
 
     def get_starting_position_and_starting_directions(
         self,
@@ -169,6 +182,29 @@ class PipeMap:
             case _:
                 raise ValueError(f"Unexpected direction {previous_direction}")
 
+    def count_row(self, row_index):
+        inside = False
+        row_area = 0
+        on_horizontal_pipe = False
+
+        for char in self.content[row_index].values():
+            if char in "SFL":
+                on_horizontal_pipe = True
+            if char in "J7|":
+                inside = not inside
+
+            if inside:
+                if char == ".":
+                    row_area += 1
+
+            print(f"{char} {inside}")
+
+        return row_area
+
+    def count_area(self):
+        for i in range(len(self.content)):
+            print(self.count_row(i))
+
 
 def move(coordinate: Coordinate, direction: Direction):
     match direction:
@@ -218,8 +254,6 @@ def get_result(input: str, part_b: bool = False):
         (starting_position, starting_directions[1]),
     ]
 
-    pipe_map.draw_map()
-
     steps = 0
 
     while steps == 0 or not met_at_middle(paths[0], paths[1]):
@@ -227,21 +261,15 @@ def get_result(input: str, part_b: bool = False):
         for i, path in enumerate(paths):
             new_position = move(path[0], path[1])
             new_direction = pipe_map.next_move(new_position, path[1])
-            print(
-                f"{pipe_map.get_char_at_coordinate(path[0])}{path[0]} [{get_direction_char(path[1])}] -> {pipe_map.get_char_at_coordinate(new_position)}{new_position} [{get_direction_char(new_direction)}]    ",
-                end="",
-            )
             paths[i] = (new_position, new_direction)
-        print()
 
-    print("MET AT MIDDLE")
-    print(
-        f"{pipe_map.get_char_at_coordinate(paths[0][0])}{paths[0][0]} {pipe_map.get_char_at_coordinate(paths[1][0])}{paths[1][0]}"
-    )
+    pipe_map.draw_map()
 
     # next_direction = pipe_map.(current_position, current_direction)
-
-    return steps
+    if not part_b:
+        return steps
+    else:
+        return pipe_map.count_area()
 
 
 #####
@@ -264,7 +292,7 @@ test_result_a = get_result(test_input)
 test_a_success = check_result(test_result_a, test_answer_a)
 print("---")
 print("-- TEST B --")
-test_result_b = get_result(test_input, True)
+test_result_b = get_result(test_input_b, True)
 test_b_success = check_result(test_result_b, test_answer_b)
 print("---")
 
