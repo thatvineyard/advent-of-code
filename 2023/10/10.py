@@ -3,6 +3,7 @@
 
 import os
 from re import L
+from turtle import position
 from typing import Callable
 
 import aocd
@@ -34,12 +35,16 @@ def try_get_multiple_file_contents(*filenames: list[str]):
     test_answer_a,
     test_input_b,
     test_answer_b,
+    test_input_b_2,
+    test_answer_b_2,
 ] = try_get_multiple_file_contents(
     "input.txt",
     "test_input.txt",
     "test_answer_a.txt",
     "test_input_b.txt",
     "test_answer_b.txt",
+    "test_input_b_2.txt",
+    "test_answer_b_2.txt",
 )
 
 #####
@@ -97,8 +102,7 @@ class PipeMap:
 
     def get_starting_position_and_starting_directions(
         self,
-    ) -> tuple[Coordinate, list[Direction]]:
-        directions = []
+    ) -> tuple[Coordinate, Direction]:
         for direction in [
             Direction.UP,
             Direction.RIGHT,
@@ -106,12 +110,9 @@ class PipeMap:
             Direction.LEFT,
         ]:
             if self.is_direction_possible(self.starting_position, direction):
-                directions.append(direction)
+                return (self.starting_position, direction)
 
-        if len(directions) < 1:
-            raise Exception("Could not find good direction for starting position")
-
-        return (self.starting_position, directions)
+        raise Exception("Could not find good direction for starting position")
 
     def is_direction_possible(self, location: Coordinate, direction: Direction):
         new_location = move(location, direction)
@@ -185,25 +186,32 @@ class PipeMap:
     def count_row(self, row_index):
         inside = False
         row_area = 0
-        on_horizontal_pipe = False
+
+        previous_char = ""
 
         for char in self.content[row_index].values():
-            if char in "SFL":
-                on_horizontal_pipe = True
-            if char in "J7|":
-                inside = not inside
+            if char in "UD":
+                if char != previous_char:
+                    inside = not inside
+                    previous_char = char
 
-            if inside:
-                if char == ".":
+            if char == ".":
+                if inside:
                     row_area += 1
+                    print("X", end="")
+                else:
+                    print(" ", end="")
+            else:
+                print(" ", end="")
 
-            print(f"{char} {inside}")
-
+        print()
         return row_area
 
     def count_area(self):
+        sum = 0
         for i in range(len(self.content)):
-            print(self.count_row(i))
+            sum += self.count_row(i)
+        return sum
 
 
 def move(coordinate: Coordinate, direction: Direction):
@@ -230,44 +238,40 @@ def get_direction_char(direction: Direction):
             return "←"
 
 
-def met_at_middle(
-    path_a: tuple[Coordinate, Direction],
-    path_b: tuple[Coordinate, Direction],
-):
-    if path_a[0] == path_b[0]:
-        return True
-
-    if move(path_a[0], path_b[1]) == path_b[0]:
-        return True
-
-
 def get_result(input: str, part_b: bool = False):
     pipe_map = PipeMap(input)
 
     (
         starting_position,
-        starting_directions,
+        starting_direction,
     ) = pipe_map.get_starting_position_and_starting_directions()
 
-    paths = [
-        (starting_position, starting_directions[0]),
-        (starting_position, starting_directions[1]),
-    ]
+    current_position = starting_position
+    current_direction = starting_direction
 
     steps = 0
 
-    while steps == 0 or not met_at_middle(paths[0], paths[1]):
+    going_up = "D"
+
+    while current_position != starting_position or steps == 0:
+        if current_direction == Direction.UP:
+            going_up = "U"
+        if current_direction == Direction.DOWN:
+            going_up = "D"
         steps += 1
-        for i, path in enumerate(paths):
-            new_position = move(path[0], path[1])
-            new_direction = pipe_map.next_move(new_position, path[1])
-            paths[i] = (new_position, new_direction)
+        new_position = move(current_position, current_direction)
+        pipe_map.set_char_at_coordinate(current_position, going_up)
+        if new_position == starting_position:
+            break
+        new_direction = pipe_map.next_move(new_position, current_direction)
+        current_position = new_position
+        current_direction = new_direction
 
     pipe_map.draw_map()
 
     # next_direction = pipe_map.(current_position, current_direction)
     if not part_b:
-        return steps
+        return steps // 2
     else:
         return pipe_map.count_area()
 
@@ -294,9 +298,11 @@ print("---")
 print("-- TEST B --")
 test_result_b = get_result(test_input_b, True)
 test_b_success = check_result(test_result_b, test_answer_b)
+test_result_b_2 = get_result(test_input_b_2, True)
+test_b_success_2 = check_result(test_result_b_2, test_answer_b_2)
 print("---")
 
-if test_b_success:
+if test_b_success and test_b_success_2:
     if inquirer.confirm("Test succeeded on one part b, run on real data?"):
         print("RUNNING PART B")
         result = get_result(input, True)
