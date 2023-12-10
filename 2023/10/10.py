@@ -72,29 +72,151 @@ class Coordinate:
         return False
 
 
+class Tile:
+    def __init__(self, char: str):
+        self.char = char
+        self.symbol = Tile.get_symbol(char)
+        self.uppiness = None
+
+    def is_starting_tile(self):
+        return self.char == "S"
+
+    def is_ground(self):
+        return self.char == "."
+
+    def can_enter_using_direction(self, incoming_direction: Direction):
+        match incoming_direction:
+            case Direction.UP:
+                return self.char in "|7F"
+            case Direction.RIGHT:
+                return self.char in "-J7"
+            case Direction.DOWN:
+                return self.char in "|LJ"
+            case Direction.LEFT:
+                return self.char in "-LF"
+            case _:
+                raise ValueError(f"Unpexpected direction and ({incoming_direction})")
+
+    def set_uppiness(self, uppiness: bool):
+        self.uppiness = uppiness
+
+    def next_direction(self, incoming_direction: Direction):
+        match incoming_direction:
+            case Direction.UP:
+                match self.char:
+                    case "|":
+                        return Direction.UP
+                    case "7":
+                        return Direction.LEFT
+                    case "F":
+                        return Direction.RIGHT
+                    case _:
+                        raise ValueError(
+                            f"Direction and character mismatch ({incoming_direction}, {self})"
+                        )
+            case Direction.RIGHT:
+                match self.char:
+                    case "-":
+                        return Direction.RIGHT
+                    case "J":
+                        return Direction.UP
+                    case "7":
+                        return Direction.DOWN
+                    case _:
+                        raise ValueError(
+                            f"Direction and character mismatch ({incoming_direction}, {self})"
+                        )
+            case Direction.DOWN:
+                match self.char:
+                    case "|":
+                        return Direction.DOWN
+                    case "L":
+                        return Direction.RIGHT
+                    case "J":
+                        return Direction.LEFT
+                    case _:
+                        raise ValueError(
+                            f"Direction and character mismatch ({incoming_direction}, {self})"
+                        )
+            case Direction.LEFT:
+                match self.char:
+                    case "-":
+                        return Direction.LEFT
+                    case "L":
+                        return Direction.UP
+                    case "F":
+                        return Direction.DOWN
+                    case _:
+                        raise ValueError(
+                            f"Direction and character mismatch ({incoming_direction}, {self})"
+                        )
+            case _:
+                raise ValueError(f"Unexpected direction {incoming_direction}")
+
+    def get_uppiness_symbol(self):
+        if self.uppiness is None:
+            return " "
+        if self.uppiness:
+            return "▴"
+        else:
+            return "▾"
+
+    def get_symbol(char: str):
+        match char:
+            case "|":
+                return "│"
+            case "-":
+                return "─"
+            case "7":
+                return "┐"
+            case "F":
+                return "┌"
+            case "J":
+                return "┘"
+            case "L":
+                return "└"
+            case "S":
+                return "◙"
+            case ".":
+                return "∙"
+            case _:
+                raise ValueError(f"Unexpected symbol ({char})")
+
+    def __repr__(self):
+        return self.symbol
+
+
 class PipeMap:
     def __init__(self, input):
-        self.content = {}
+        self.content: dict[int, dict[int, Tile]] = {}
         self.starting_position: Coordinate | None = None
 
         for i, line in enumerate(input.split("\n")):
             self.content[i] = {}
             for j, char in enumerate(line):
-                if char == "S":
+                tile = Tile(char)
+                if tile.is_starting_tile():
                     self.starting_position = Coordinate(i, j)
 
-                self.content[i][j] = char
+                self.content[i][j] = tile
 
         if not self.starting_position:
             raise ValueError("Input data had no starting position")
 
-    def draw_map(self):
+    def draw_map(self, include_uppiness=False):
         for i in range(len(self.content)):
             for j in range(len(self.content[i])):
-                print(self.get_char_at_coordinate(Coordinate(i, j)), end="")
+                if include_uppiness:
+                    print_char = self.get_tile_at_coordinate(
+                        Coordinate(i, j)
+                    ).get_uppiness_symbol()
+                else:
+                    print_char = self.get_tile_at_coordinate(Coordinate(i, j))
+
+                print(print_char, end="")
             print()
 
-    def get_char_at_coordinate(self, coordinate: Coordinate):
+    def get_tile_at_coordinate(self, coordinate: Coordinate):
         return self.content[coordinate.x][coordinate.y]
 
     def set_char_at_coordinate(self, coordinate: Coordinate, char: str):
@@ -106,8 +228,6 @@ class PipeMap:
         for direction in [
             Direction.UP,
             Direction.RIGHT,
-            Direction.DOWN,
-            Direction.LEFT,
         ]:
             if self.is_direction_possible(self.starting_position, direction):
                 return (self.starting_position, direction)
@@ -116,94 +236,34 @@ class PipeMap:
 
     def is_direction_possible(self, location: Coordinate, direction: Direction):
         new_location = move(location, direction)
-        char = self.get_char_at_coordinate(new_location)
-        match direction:
-            case Direction.UP:
-                return char in "|7F"
-            case Direction.RIGHT:
-                return char in "-J7"
-            case Direction.DOWN:
-                return char in "|LJ"
-            case Direction.LEFT:
-                return char in "-LF"
-            case _:
-                raise ValueError(f"Unpexpected direction and ({direction})")
+        tile = self.get_tile_at_coordinate(new_location)
+        return tile.can_enter_using_direction(direction)
 
     def next_move(self, location: Coordinate, previous_direction: Direction):
-        char = self.get_char_at_coordinate(location)
-        match previous_direction:
-            case Direction.UP:
-                match char:
-                    case "|":
-                        return Direction.UP
-                    case "7":
-                        return Direction.LEFT
-                    case "F":
-                        return Direction.RIGHT
-                    case _:
-                        raise ValueError(
-                            f"Direction and character mismatch ({previous_direction} | {char})"
-                        )
-            case Direction.RIGHT:
-                match char:
-                    case "-":
-                        return Direction.RIGHT
-                    case "J":
-                        return Direction.UP
-                    case "7":
-                        return Direction.DOWN
-                    case _:
-                        raise ValueError(
-                            f"Direction and character mismatch ({previous_direction} | {char})"
-                        )
-            case Direction.DOWN:
-                match char:
-                    case "|":
-                        return Direction.DOWN
-                    case "L":
-                        return Direction.RIGHT
-                    case "J":
-                        return Direction.LEFT
-                    case _:
-                        raise ValueError(
-                            f"Direction and character mismatch ({previous_direction} | {char})"
-                        )
-            case Direction.LEFT:
-                match char:
-                    case "-":
-                        return Direction.LEFT
-                    case "L":
-                        return Direction.UP
-                    case "F":
-                        return Direction.DOWN
-                    case _:
-                        raise ValueError(
-                            f"Direction and character mismatch ({previous_direction} | {char})"
-                        )
-            case _:
-                raise ValueError(f"Unexpected direction {previous_direction}")
+        tile = self.get_tile_at_coordinate(location)
+        return tile.next_direction(previous_direction)
 
     def count_row(self, row_index):
         inside = False
         row_area = 0
 
-        previous_char = ""
+        previous_uppiness = None
 
-        for char in self.content[row_index].values():
-            if char in "UD":
-                if char != previous_char:
-                    inside = not inside
-                    previous_char = char
-
-            if char == ".":
+        for tile in self.content[row_index].values():
+            if tile.uppiness is None:
                 if inside:
                     row_area += 1
-                    print("X", end="")
+                    print("●", end="")
                 else:
-                    print(" ", end="")
-            else:
-                print(" ", end="")
+                    print("◌", end="")
+                continue
 
+            print(tile.get_uppiness_symbol(), end="")
+            if tile.uppiness is not None and (
+                previous_uppiness is None or tile.uppiness != previous_uppiness
+            ):
+                inside = not inside
+                previous_uppiness = tile.uppiness
         print()
         return row_area
 
@@ -251,16 +311,16 @@ def get_result(input: str, part_b: bool = False):
 
     steps = 0
 
-    going_up = "D"
+    going_up = True
 
     while current_position != starting_position or steps == 0:
         if current_direction == Direction.UP:
-            going_up = "U"
+            going_up = True
         if current_direction == Direction.DOWN:
-            going_up = "D"
+            going_up = False
+        pipe_map.get_tile_at_coordinate(current_position).set_uppiness(going_up)
         steps += 1
         new_position = move(current_position, current_direction)
-        pipe_map.set_char_at_coordinate(current_position, going_up)
         if new_position == starting_position:
             break
         new_direction = pipe_map.next_move(new_position, current_direction)
@@ -268,6 +328,7 @@ def get_result(input: str, part_b: bool = False):
         current_direction = new_direction
 
     pipe_map.draw_map()
+    pipe_map.draw_map(True)
 
     # next_direction = pipe_map.(current_position, current_direction)
     if not part_b:
@@ -302,7 +363,7 @@ test_result_b_2 = get_result(test_input_b_2, True)
 test_b_success_2 = check_result(test_result_b_2, test_answer_b_2)
 print("---")
 
-if test_b_success and test_b_success_2:
+if test_b_success or test_b_success_2:
     if inquirer.confirm("Test succeeded on one part b, run on real data?"):
         print("RUNNING PART B")
         result = get_result(input, True)
