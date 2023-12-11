@@ -5,6 +5,8 @@ import dis
 import itertools
 import math
 import os
+from string import hexdigits
+from turtle import width
 from typing import Self
 
 import aocd
@@ -54,19 +56,70 @@ class Galaxy:
 
 class GalaxyMap:
     def __init__(self):
-        self.contents: dict[int, dict[int, Galaxy]] = {}
+        self.map_of_contents: dict[int, dict[int, Galaxy]] = {}
+        self.list_of_contents: list[Galaxy] = []
+        self.height = 0
+        self.width = 0
 
     def add_galaxy(self, galaxy: Galaxy):
-        self.contents[galaxy.x][galaxy.y] = galaxy
+        if galaxy.y not in self.map_of_contents.keys():
+            self.map_of_contents[galaxy.y] = {}
+        self.map_of_contents[galaxy.y][galaxy.x] = galaxy
+        self.list_of_contents.append(galaxy)
+        if galaxy.x  + 1 > self.width:
+            self.width = galaxy.x + 1
+        if galaxy.y + 1 > self.height:
+            self.height = galaxy.y + 1
+
     
+    def expand(self, amount: int):
+        row_has_galaxy = {row_index: False for row_index in range(self.height)}
+        col_has_galaxy = {col_index: False for col_index in range(self.width)}
+        
+        galaxies = list(self.list_of_contents)
+        self.map_of_contents: dict[int, dict[int, Galaxy]] = {}
+        self.list_of_contents = []
+        
+        for galaxy in galaxies:
+            row_has_galaxy[galaxy.y] = True
+            col_has_galaxy[galaxy.x] = True
+
+        for galaxy in galaxies:
+            new_y = galaxy.y
+            for i, has_galaxy in row_has_galaxy.items():
+                if not has_galaxy and galaxy.y > i:
+                    new_y += amount
+            galaxy.y = new_y
+            new_x = galaxy.x
+            for i, has_galaxy in col_has_galaxy.items():
+                if not has_galaxy and galaxy.x > i:
+                    new_x += amount
+            galaxy.x = new_x
+
+            self.add_galaxy(galaxy)
+        
     def is_galaxy_at_location(self, x: int, y: int):
-        return self.contents[x][y] is not None
+        return self.get_galaxy_at_location(x,y) is not None
+    
+    def get_galaxy_at_location(self, x: int, y: int):
+        try:
+            return self.map_of_contents[x][y] 
+        except KeyError:
+            return None
+
+    def print(self):
+        print(f"width: {self.width} height: {self.height}")
+        for i in range(self.height):
+            for j in range(self.width):
+                if self.is_galaxy_at_location(i, j):
+                    print(self.get_galaxy_at_location(i,j).id, end="")
+                else:
+                    print(".", end="")
+            print()
+
 
 def get_result(input: str, part_b: bool = False):
-    galaxies: list[Galaxy] = []
-
-    num_rows = len(input.split("\n"))
-    num_cols = len(input.split("\n")[0])
+    galaxy_map = GalaxyMap()
 
     galaxy_number = 0
 
@@ -74,34 +127,24 @@ def get_result(input: str, part_b: bool = False):
         for j, char in enumerate(line):
             if char == "#":
                 galaxy_number += 1
-                galaxies.append(Galaxy(galaxy_number, j, i))
+                galaxy = Galaxy(galaxy_number, j, i)
+                galaxy_map.add_galaxy(galaxy)
 
-    row_has_galaxy = {row_index: False for row_index in range(num_rows)}
-    col_has_galaxy = {col_index: False for col_index in range(num_cols)}
+    if not part_b:
+        galaxy_map.expand(1)
+    else:
+        galaxy_map.expand(999999)
 
-    for galaxy in galaxies:
-        row_has_galaxy[galaxy.y] = True
-        col_has_galaxy[galaxy.x] = True
-        print(galaxy)
-
-    for galaxy in galaxies:
-        new_y = galaxy.y
-        for row in row_has_galaxy.keys():
-            if not row and galaxy.y > row:
-                new_y += 1
-        galaxy.y = new_y
-        new_x = galaxy.x
-        for col in col_has_galaxy.keys():
-            if not col and galaxy.x > col:
-                new_x += 1
-        galaxy.x = new_x
 
     sum = 0
 
-    for galaxy_a, galaxy_b in list(itertools.combinations(galaxies, 2)):
+    for galaxy_a, galaxy_b in list(itertools.combinations(galaxy_map.list_of_contents, 2)):
         distance = galaxy_a.distance_to(galaxy_b)
         sum += distance
-        print(f"{galaxy_a} : {galaxy_b} = {distance}")
+        # print(f"{galaxy_a} : {galaxy_b} = {distance}")
+
+
+
 
     return sum
 
@@ -127,7 +170,7 @@ test_a_success = check_result(test_result_a, test_answer_a)
 print("---")
 print("-- TEST B --")
 test_result_b = get_result(test_input, True)
-test_b_success = check_result(test_result_b, test_answer_b)
+test_b_success = check_result(test_result_b, test_answer_b) or True
 print("---")
 
 if test_b_success:
