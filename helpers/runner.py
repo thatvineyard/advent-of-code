@@ -1,6 +1,5 @@
 import os
 import traceback
-from types import TracebackType
 from typing import Tuple
 
 import aocd
