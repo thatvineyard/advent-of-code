@@ -87,7 +87,7 @@ class Runner:
                 test_b_success = Runner.check_result(test_solution_b, test_answer_a)
 
                 if test_b_success:
-                    if inquirer.confirm("Test succeeded on one part a, run on real data?"):
+                    if inquirer.confirm("Test succeeded on one part b, run on real data?"):
                         print("------------")
                         input_b = self.try_get_file_contents(INPUT_B_FILE_NAME)
                         if input_b is None:
