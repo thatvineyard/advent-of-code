@@ -60,7 +60,7 @@ class Runner:
                         if inquirer.confirm(f"Submit result ({result})?"):
                             aocd.submit(result, part="a", year=watch_date[0], day=watch_date[2])
                             self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
-                            if self.puzzle.answer_a is not None:
+                            if self.check_solved("a"):
                                 print("Success!")
 
             except Exception as e:
@@ -101,7 +101,7 @@ class Runner:
                         if inquirer.confirm(f"Submit result ({result})?"):
                             aocd.submit(result, part="b", year=watch_date[0], day=watch_date[2])
                             self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
-                            if self.puzzle.answer_b is not None:
+                            if self.check_solved("b"):
                                 print("Success!")
 
 
