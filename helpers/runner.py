@@ -36,7 +36,7 @@ class Runner:
         print("🧪 TEST A   ")
         print("------------")
 
-        if self.puzzle.answer_a is not None:
+        if self.check_solved("a"):
             print("Already solved!")
         else:
 
@@ -73,7 +73,7 @@ class Runner:
         print("🧪 TEST B   ")
         print("------------")
 
-        if self.puzzle.answer_a is not None:
+        if self.check_solved("b"):
             print("Already solved!")
         else:
             test_input_b = self.try_get_file_contents(TEST_INPUT_B_FILE_NAME)
@@ -110,6 +110,17 @@ class Runner:
                 print(f"⚠️  Running failed because of exception: {e}")
             
         print("============")
+
+    def check_solved(self, part: str):
+        try:
+            if part == "a":
+                self.puzzle.answer_a
+                return True
+            if part == "b":
+                self.puzzle.answer_b
+                return True
+        except AttributeError:
+            return False
 
     def check_result(result: str, answer: str):
         if result is None or result == "":
