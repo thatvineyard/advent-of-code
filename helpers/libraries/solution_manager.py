@@ -28,8 +28,8 @@ class SolutionManager:
       try:  
         class_defintion = SolutionManager.get_class_definition(self.module_path, module_name, self.class_name)
         self.solution = class_defintion()
-      except Exception:
-        print("⚠️  Loading class failed.")
+      except Exception as e:
+        print(f"⚠️  Loading class failed: {e}")
         self.solution = None
         return  
 

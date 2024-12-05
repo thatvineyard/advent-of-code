@@ -1,26 +1,34 @@
 import multiprocessing
+import sys
 import time
-from watchdog.observers import (
-    Observer,
-)
-from watchdog.events import (
-    FileSystemEventHandler,
-    EVENT_TYPE_MODIFIED,
-)
-
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler, EVENT_TYPE_MODIFIED, FileModifiedEvent
 
 
 class FileChangeHandler(FileSystemEventHandler):
-    def __init__(self, callback, cooldown_seconds = 1):
+    def __init__(self, callback, cooldown_seconds=1):
         super().__init__()
-        
         self._callback = callback
         self._cooldown_seconds = cooldown_seconds
-        self.previous_trigger = time.time()
-        self.current_thread: multiprocessing.Process | None = None
+        self.previous_trigger = sys.float_info.min
+        self.current_process: multiprocessing.Process | None = None
 
     def trigger(self):
-        self._callback()
+        if self.is_running():
+            self.current_process.terminate()
+            self.current_process.join()
+        
+        self.current_process = multiprocessing.Process(target=self.run_callback)
+        self.current_process.start()
+
+    def run_callback(self):
+        try:
+            self._callback()
+        except KeyboardInterrupt:
+            print("❗ Run interrupted (press ctrl+c again to quit)")
+
+    def is_running(self):
+        return self.current_process and self.current_process.is_alive()
 
     def on_modified(self, event):
         if not event.is_directory and event.event_type == EVENT_TYPE_MODIFIED:
@@ -32,27 +40,18 @@ class FileChangeHandler(FileSystemEventHandler):
     def cooldown_expired(self):
         return time.time() > self.previous_trigger + self._cooldown_seconds
 
-    # if self.current_thread:
-    #     self.current_thread.terminate()
-    # self.current_thread = multiprocessing.Process(target=on_change, args=())
-    # print("Created thread")
-    # self.current_thread.start()
-    # print("Joining thread")
-    # self.current_thread.join()
 
 class Watcher:
-
     def __init__(self, watch_dir: str, on_change):
         self._watch_dir = watch_dir
         self._event_handler = FileChangeHandler(on_change)
 
     def start(self):
         print(f"👀 Starting to monitor files in {self._watch_dir}")
-        Watcher.monitor_file_changes(self._watch_dir, self._event_handler)
+        self.monitor_file_changes(self._watch_dir, self._event_handler)
 
-    def monitor_file_changes(
-        directory, event_handler: FileChangeHandler
-    ):
+    @staticmethod
+    def monitor_file_changes(directory, event_handler: FileChangeHandler):
         observer = Observer()
         observer.schedule(
             event_handler,
@@ -61,14 +60,15 @@ class Watcher:
         )
         observer.start()
 
-        # manually trigger first
-        event_handler.trigger()
+        # Manually trigger the first run
+        event_handler.on_modified(FileModifiedEvent(src_path=directory))
 
-        try:
-            while True:
+        while True:
+            try:
                 time.sleep(1)
-        except KeyboardInterrupt:
-            observer.stop()
+            except KeyboardInterrupt:
+                if not event_handler.is_running():
+                    observer.stop()
+                    break
 
         observer.join()
-

@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import traceback
 from typing import Tuple
@@ -152,5 +153,11 @@ class Runner:
         self.watcher.start()
 
 
-runner = Runner(watch_date)
-runner.start()
+
+if __name__ == "__main__":
+    runner = Runner(watch_date)
+    
+    multiprocessing.freeze_support()
+    runner.start()
+
+    print("👋 Goodbye")
