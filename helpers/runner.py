@@ -68,7 +68,7 @@ class Runner:
                         start_time = time.time()
                         result = self.solution_manager.run_solution_a(input_a)
                         end_time = time.time()
-                        
+
                         print()
                         print("--- 🗳️  Result ------------------------")
 
@@ -80,7 +80,7 @@ class Runner:
 
                         print()
                         if inquirer.confirm(f"Submit result ({result})?"):
-                            aocd.submit(result, part="a", year=watch_date[0], day=watch_date[2])
+                            aocd.submit(result, part="a", year=watch_date[0], day=watch_date[2], quiet=True)
                             self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
                             if self.check_solved("a"):
                                 print("🎉  Success!")
@@ -139,7 +139,7 @@ class Runner:
 
                         print()
                         if inquirer.confirm(f"Submit result ({result})?"):
-                            aocd.submit(result, part="b", year=watch_date[0], day=watch_date[2])
+                            aocd.submit(result, part="b", year=watch_date[0], day=watch_date[2], quiet=True)
                             self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
                             if self.check_solved("b"):
                                 print("🎉  Success!")
