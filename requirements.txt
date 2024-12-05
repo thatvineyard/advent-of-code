@@ -3,3 +3,4 @@ inquirer
 python-dotenv
 markdownify
 watchdog
+humanize
