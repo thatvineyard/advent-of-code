@@ -42,6 +42,17 @@ class SolutionManager:
         class_defintion = getattr(module, class_name)
         return class_defintion
     
+    def run_solution(self, part : str, input : str):
+        if self.solution is None:
+            print("⚠️  No solution loaded yet.") 
+            return
+        
+        if part == "a":
+            return self.solution.get_answer_a(input)
+
+        if part == "b":
+            return self.solution.get_answer_b(input)
+    
     def run_solution_a(self, input:str):
         if self.solution is None:
             print("⚠️  No solution loaded yet.") 
