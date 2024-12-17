@@ -23,6 +23,7 @@ TEST_ANSWER_B_FILE_NAME="test_answer_b.txt"
 
 watch_date = cli.get_date()
 force_a = cli.get_force_a()
+force_b = cli.get_force_b()
 
 class Runner:
   
@@ -35,8 +36,14 @@ class Runner:
 
     def on_change(self):
         self.solution_manager.load_solution()
-        self.run_a()
-        self.run_b()
+        try:
+            a_succeeded = self.run_a()
+            if not a_succeeded:
+                return
+            
+            self.run_b()
+        except Exception:
+            pass
     
     def run_a(self):
         part = "a"
@@ -45,7 +52,7 @@ class Runner:
         test_answer_a = self.try_get_file_contents(TEST_ANSWER_A_FILE_NAME)
         input_a = self.try_get_file_contents(INPUT_FILE_NAME)
         
-        self.run(test_input_a, test_answer_a, input_a, part, force_a)
+        return self.run(test_input_a, test_answer_a, input_a, part, force_a)
         
     def run_b(self):
         part = "b"
@@ -60,8 +67,7 @@ class Runner:
         if input_b is None:
             input_b = self.try_get_file_contents(INPUT_FILE_NAME)
         
-
-        self.run(test_input_b, test_answer_b, input_b, part)
+        return self.run(test_input_b, test_answer_b, input_b, part, force_b)
 
     def run(self, test_input, test_answer, input, part, force = False):
         print("======================================")
@@ -73,7 +79,7 @@ class Runner:
         if is_solved:
             print("✅  Already solved!")
             if not force:
-                return
+                return True
             print("▶️   But running anyway due to force")
         
         try:
@@ -88,37 +94,44 @@ class Runner:
             print()
             print("--------------------------------------")
 
-            if test_success:
-                if inquirer.confirm(f"Test succeeded on one part {part}, run on real data?"):
-                    print("--------------------------------------")                        
-                    start_time = time.time()
-                    result = self.solution_manager.run_solution(part, input)
-                    end_time = time.time()
-                        
-                    print()
-                    print("--- 🗳️  Result ------------------------")
+            if not test_success:
+                return False
+                
+            if not inquirer.confirm(f"Test succeeded on one part {part}, run on real data?"):
+                return False
+            
+            print("--------------------------------------")                        
+            start_time = time.time()
+            result = self.solution_manager.run_solution(part, input)
+            end_time = time.time()
+                
+            print()
+            print("--- 🗳️  Result ------------------------")
 
-                    running_time = humanize.precisedelta(datetime.timedelta(seconds=end_time - start_time), minimum_unit="microseconds")
-                    print(f"⏱️  Finished in {running_time}")
+            running_time = humanize.precisedelta(datetime.timedelta(seconds=end_time - start_time), minimum_unit="microseconds")
+            print(f"⏱️  Finished in {running_time}")
 
-                    print("🟦 ", end="")
-                    print(result)
+            print("🟦 ", end="")
+            print(result)
 
-                    print()
-                    if is_solved:
-                        inquirer.confirm(f"Continue?")
+            print()
+            if is_solved:
+                inquirer.confirm(f"Continue?")
+            else:
+                if inquirer.confirm(f"Submit result ({result})?"):
+                    aocd.submit(result, part=part, year=watch_date[0], day=watch_date[2], quiet=True)
+                    self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
+                    if self.check_solved(part):
+                        print("🎉  Success!")
+                        return True
                     else:
-                        if inquirer.confirm(f"Submit result ({result})?"):
-                            aocd.submit(result, part=part, year=watch_date[0], day=watch_date[2], quiet=True)
-                            self.puzzle = aocd.models.Puzzle(year=watch_date[0], day=watch_date[2])
-                            if self.check_solved(part):
-                                print("🎉  Success!")
+                        return False
 
         except Exception as e:
             traceback.print_exc()
             print(f"⚠️  Running failed because of exception: {e}")
-            print()
             print("--------------------------------------")
+            return False
         finally:
             print()
             print("======================================")
