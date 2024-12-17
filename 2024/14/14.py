@@ -3,7 +3,11 @@ import time
 from turtle import pos
 from typing import List, Tuple
 from PIL import Image
+from colorama import init
 from libraries.solution_manager import PuzzleSolution
+from sty import RgbFg, fg
+
+init(autoreset=True)
 
 def load_mask_image_to_matrix(image_path):
     with Image.open(image_path) as img:
@@ -15,7 +19,7 @@ def load_mask_image_to_matrix(image_path):
             row = []
             for x_i in range(width):
                 pixel = img.getpixel((x_i, y_i))
-                row.append(pixel[0] > 200)
+                row.append(pixel[0] / 255)
             pixel_matrix.append(row)
 
     return pixel_matrix
@@ -151,27 +155,39 @@ class Solution(PuzzleSolution):
         
         num_robots = len(robots)
         
-        image_file_name = "mask.png"
+        image_file_name = "mask_multilayered.png"
         image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), image_file_name)
         mask_matrix = load_mask_image_to_matrix(image_path)
         mask_height = len(mask_matrix)
         mask_width = len(mask_matrix[0])
         
+        concentration_threshold_full = 0.2
+        concentration_threshold_half = 0.1
+        
         for y_i in range(mask_height):
             for x_i in range(mask_width):
-                if mask_matrix[y_i][x_i]:
-                    print("▮  ", end="")
+                mask_pixel_is_full = mask_matrix[y_i][x_i] > concentration_threshold_full
+                mask_pixel_is_half = mask_matrix[y_i][x_i] > concentration_threshold_half
+                mask_pixel_is_off = mask_matrix[y_i][x_i] <= concentration_threshold_half
+                
+                if mask_pixel_is_full:    
+                    print(f"{fg.white}▮  {fg.rs}", end="")
+                elif mask_pixel_is_half:
+                    print(f"{fg.black}▮  {fg.rs}", end="")
                 else:
-                    print("▯  ", end="")
+                    # print(f"{fg.black}▮  {fg.rs}", end="")
+                    print("   ", end="")
                     
             print()
         
         print()
         
         
-        concentration_threshold = 0.1
-        positive_match_score = 1
-        negative_match_score = 1
+        filled_match_score = 1
+        empty_match_score = 1
+        empty_miss_penalty = -3
+        
+        half_match_modifier = 0.2
         highest_score = 0
         high_match_iterations = []        
         
@@ -202,13 +218,34 @@ class Solution(PuzzleSolution):
                     count = quadrant_counts[y_i][x_i]
                     concentration = count / max_count
                     
-                    pixel_is_active =  concentration > concentration_threshold
-                    mask_pixel_is_active = mask_matrix[y_i][x_i]
+                    pixel_is_full =  concentration > concentration_threshold_full
+                    mask_pixel_is_full = mask_matrix[y_i][x_i] > concentration_threshold_full
+                    pixel_is_half =  concentration > concentration_threshold_half
+                    mask_pixel_is_half = mask_matrix[y_i][x_i] > concentration_threshold_half
+                    pixel_is_off = concentration <= concentration_threshold_half
+                    mask_pixel_is_off = mask_matrix[y_i][x_i] <= concentration_threshold_half
                     
-                    if pixel_is_active and mask_pixel_is_active:
-                        score += positive_match_score
-                    if not pixel_is_active and not mask_pixel_is_active:
-                        score += negative_match_score
+                    if pixel_is_full:
+                        if mask_pixel_is_full:
+                            score += filled_match_score
+                        if mask_pixel_is_half:
+                            score += filled_match_score * half_match_modifier
+                        if mask_pixel_is_off:
+                            score += empty_miss_penalty
+                    
+                    if pixel_is_half:
+                        if mask_pixel_is_half:
+                            score += filled_match_score
+                        if mask_pixel_is_full:
+                            score += filled_match_score * half_match_modifier
+                        if mask_pixel_is_off:
+                            score += empty_match_score * half_match_modifier
+                            
+                    if pixel_is_off:
+                        if mask_pixel_is_off:
+                            score += empty_match_score
+                        if mask_pixel_is_half:
+                            score += empty_match_score * half_match_modifier                   
                     
             if score <= highest_score:
                 continue
@@ -221,12 +258,17 @@ class Solution(PuzzleSolution):
                 for x_i in range(len(quadrant_counts[y_i])):
                     count = quadrant_counts[y_i][x_i]
                     concentration = count / max_count
-                    pixel_is_active =  concentration > concentration_threshold
                     
-                    if pixel_is_active:    
-                        print("▮  ", end="")
+                    pixel_is_full =  concentration > concentration_threshold_full
+                    pixel_is_half =  concentration > concentration_threshold_half
+                    pixel_is_off = concentration <= concentration_threshold_half
+                    
+                    if pixel_is_full:    
+                        print(f"{fg.white}▮  {fg.rs}", end="")
+                    elif pixel_is_half:
+                        print(f"{fg.black}▮  {fg.rs}", end="")
                     else:
-                        print("▯  ", end="")           
+                        print("   ", end="")
                 print()
 
         for iteration in high_match_iterations:
