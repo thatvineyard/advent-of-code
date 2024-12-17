@@ -2,8 +2,23 @@ import os
 import time
 from turtle import pos
 from typing import List, Tuple
+from PIL import Image
 from libraries.solution_manager import PuzzleSolution
 
+def load_mask_image_to_matrix(image_path):
+    with Image.open(image_path) as img:
+        img = img.convert("RGB")
+        width, height = img.size
+
+        pixel_matrix = []
+        for y_i in range(height):
+            row = []
+            for x_i in range(width):
+                pixel = img.getpixel((x_i, y_i))
+                row.append(pixel[0] > 200)
+            pixel_matrix.append(row)
+
+    return pixel_matrix
 
 class Vector:
     def __init__(self, x: int, y: int):
@@ -78,26 +93,25 @@ class Grid:
             for x in range(width):
                 yield Vector(x, y)
 
-    def calculate_wrapped_position(self, position: Vector, coordinate: Vector):
-        new_position = position + coordinate
+    def calculate_wrapped_position(self, position: Vector, coordinate: Vector, iterations: int):
+        new_position = position + coordinate.scale(iterations)
         new_position.x = new_position.x % self.width
         new_position.y = new_position.y % self.height
         return new_position
 
-    def count_robots_in_quadrants(self, robots: List[Robot]):
-        quadrant_TL = Grid(self.width // 2, self.height // 2, Vector.zero())
-        quadrant_TR = Grid(self.width // 2, self.height // 2, Vector((self.width // 2) + 1, 0))
-        quadrant_BL = Grid(self.width // 2, self.height // 2, Vector(0, (self.height // 2) + 1))
-        quadrant_BR = Grid(self.width // 2, self.height // 2, Vector((self.width // 2) + 1, (self.height // 2) + 1))
-
-        quadrant_counts = {quadrant_TL: 0, quadrant_TR: 0, quadrant_BL: 0, quadrant_BR: 0}
-
-        for quadrant in quadrant_counts.keys():
-            # print(f"{quadrant} ------")
-            for robot in robots:
-                if quadrant.is_in_bounds(robot.position):
-                    # print(f"{robot} was in bounds")
-                    quadrant_counts[quadrant] += 1
+    def count_robots_in_quadrants(self, num_quadrants_x: int, num_quadrants_y: int, robots: List[Robot]):
+        
+        quadrant_counts = {}
+        
+        for y_i in range(num_quadrants_y):
+            quadrant_counts[y_i] = {}
+            for x_i in range(num_quadrants_x):
+                quadrant = Grid(self.width // num_quadrants_x, self.height // num_quadrants_y, Vector((((self.width + 1) * x_i) // num_quadrants_x), (((self.height + 1) * y_i) // num_quadrants_y)))
+                quadrant_counts[y_i][x_i] = 0
+                            
+                for robot in robots:
+                    if quadrant.is_in_bounds(robot.position):
+                        quadrant_counts[y_i][x_i] += 1
 
         return quadrant_counts
 
@@ -119,70 +133,115 @@ class Solution(PuzzleSolution):
     
     def get_answer_a(self, input: str) -> int | float | str:
         grid, robots = self.get_row_elements(input)
-        
-        
-        # for robot in robots:
-        #     print(robot)
-        
-        # print("========")
 
-        for step_i in range(100):
-            for robot in robots:
-                robot.position = grid.calculate_wrapped_position(robot.position, robot.velocity)
+        for robot in robots:
+            robot.position = grid.calculate_wrapped_position(robot.position, robot.velocity, 100)
 
-
-
-        # for robot in robots:
-        #     print(robot)
-        
-        # print("========")
-
-
-
-        quadrant_counts = grid.count_robots_in_quadrants(robots)
-
+        quadrant_counts = grid.count_robots_in_quadrants(2, 2, robots)
         product = 1
 
-        for quadrant, count in quadrant_counts.items():
-            # print(f"{quadrant}: {count}")
-            product = product * count
-
+        for y_i in range(len(quadrant_counts)):
+            for x_i in range(len(quadrant_counts[y_i])):
+                product = product * quadrant_counts[y_i][x_i]
+                
         return product
 
     def get_answer_b(self, solution_input: str) -> int | float | str:
         grid, robots = self.get_row_elements(solution_input)
         
+        num_robots = len(robots)
         
-        # for robot in robots:
-        #     print(robot)
+        image_file_name = "mask.png"
+        image_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), image_file_name)
+        mask_matrix = load_mask_image_to_matrix(image_path)
+        mask_height = len(mask_matrix)
+        mask_width = len(mask_matrix[0])
         
-        # print("========")
-
-        for step_i in range(100, 200):
+        for y_i in range(mask_height):
+            for x_i in range(mask_width):
+                if mask_matrix[y_i][x_i]:
+                    print("▮  ", end="")
+                else:
+                    print("▯  ", end="")
+                    
+            print()
+        
+        print()
+        
+        
+        concentration_threshold = 0.1
+        positive_match_score = 1
+        negative_match_score = 1
+        highest_score = 0
+        high_match_iterations = []        
+        
+        for i in range(0, 10000):
+        # for i in range(7700, 7800):
+            if i % 100 == 0:
+                print(i)
+            moved_robots = []
+            
             for robot in robots:
-                robot.position = grid.calculate_wrapped_position(robot.position, robot.velocity)
-            print(f"================= {step_i} seconds ==================")
-            grid.print_with_robots(robots)
+                moved_robot = Robot(robot.position, robot.velocity)
+                moved_robot.position = grid.calculate_wrapped_position(moved_robot.position, moved_robot.velocity, i)
+                moved_robots.append(moved_robot)
+                    
+            quadrant_counts = grid.count_robots_in_quadrants(mask_width, mask_height, moved_robots)
 
-            time.sleep(0.2)
+            max_count = 0
+            for y_i in range(len(quadrant_counts)):
+                for x_i in range(len(quadrant_counts[y_i])):
+                    count = quadrant_counts[y_i][x_i]
+                    if count > max_count:
+                        max_count = count
 
+            score = 0
 
-        # for robot in robots:
-        #     print(robot)
-        
-        # print("========")
+            for y_i in range(len(quadrant_counts)):
+                for x_i in range(len(quadrant_counts[y_i])):
+                    count = quadrant_counts[y_i][x_i]
+                    concentration = count / max_count
+                    
+                    pixel_is_active =  concentration > concentration_threshold
+                    mask_pixel_is_active = mask_matrix[y_i][x_i]
+                    
+                    if pixel_is_active and mask_pixel_is_active:
+                        score += positive_match_score
+                    if not pixel_is_active and not mask_pixel_is_active:
+                        score += negative_match_score
+                    
+            if score <= highest_score:
+                continue
+            
+            highest_score = score
+            high_match_iterations.append(i)
+            
+            print(f"Iteration {i} - Score: {score}")
+            for y_i in range(len(quadrant_counts)):
+                for x_i in range(len(quadrant_counts[y_i])):
+                    count = quadrant_counts[y_i][x_i]
+                    concentration = count / max_count
+                    pixel_is_active =  concentration > concentration_threshold
+                    
+                    if pixel_is_active:    
+                        print("▮  ", end="")
+                    else:
+                        print("▯  ", end="")           
+                print()
 
+        for iteration in high_match_iterations:
+            moved_robots = []
+            
+            for robot in robots:
+                moved_robot = Robot(robot.position, robot.velocity)
+                moved_robot.position = grid.calculate_wrapped_position(moved_robot.position, moved_robot.velocity, iteration)
+                moved_robots.append(moved_robot)
 
-
-        quadrant_counts = grid.count_robots_in_quadrants(robots)
-
-        product = 1
-
-        for quadrant, count in quadrant_counts.items():
-            # print(f"{quadrant}: {count}")
-            product = product * count
-
-        return product
+            print("---------------------------")
+            print(f"Iteration {iteration}")
+            grid.print_with_robots(moved_robots)
+            print("---------------------------")
+            print()
 
     def get_row_elements(self, input: str) -> Tuple[Grid, List[Robot]]:
         lines = input.split("\n")
