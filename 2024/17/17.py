@@ -119,7 +119,7 @@ class Program:
         self.registerB = registerB
         self.registerC = registerC
         self.pointer = ProgramPointer(instructions)
-        self.output: List[str] = []
+        self.output: List[int] = []
     
     def get_literal_operand(self):
         return self.pointer.get_current_operand()
@@ -216,7 +216,16 @@ class Program:
     def output_octo_modulo(self):
         value = self.get_combo_operand()
         modulo_value = value % 8
-        self.output.append(str(modulo_value))
+        self.output.append(modulo_value)
+    
+    def process_while_output_matches_until_halted(self, search_list: List[int]):
+        while not self.is_halted() and self.output_matches_start(search_list):
+            self.process()
+    
+    def output_matches_start(self, search_list: List[int]):
+        if len(self.output) > len(search_list):
+            return False
+        return search_list[:len(self.output)] == self.output
     
     def __repr__(self):
         return f"[{self.registerA}, {self.registerB}, {self.registerC}] | {self.pointer}"
@@ -249,63 +258,103 @@ class Solution(PuzzleSolution):
         
         print(program)
         
-        start_iteration = 0
-        # iteration = start_iteration
-        # iteration = 35184420803835
-        max_iterations = pow(8, len(instructions)+1)
-        
-        goal = ",".join(list(map(str, instructions)))
+        goal = list(map(lambda instruction: instruction.value, instructions))
         
         print(f"Goal: {goal}")
+             
+        result = self.find_next_digit(
+            digits=goal, 
+            digit_index=len(goal) - 1, 
+            from_iteration=0, 
+            to_iteration=8, 
+            registerB=registers[1].copy(), 
+            registerC=registers[2].copy(), 
+            instructions=instructions)
         
-        
-        all_historic_iterations = []
-
-        
-        lowest_value = sys.maxsize
-        
-        for _ in range(0, 100):
-            result = ""
-            max_length = 0
-            iterations_matching_digits = []
-            max_iterations = 8
-            iteration = 0
+        # for _ in range(0, 1):
+        #     result = ""
+        #     max_length = 0
+        #     iterations_matching_digits = []
+        #     max_iterations = 8
+        #     iteration = 0
                         
-            while result != goal and iteration < max_iterations:
-                iteration += 1
+        #     while result != goal and iteration < max_iterations:
+        #         iteration += 1
                 
-                if iteration in all_historic_iterations:
-                    continue
+        #         program = Program(Register("A", iteration), registers[1].copy(), registers[2].copy(), instructions)
                 
-                program = Program(Register("A", iteration), registers[1].copy(), registers[2].copy(), instructions)
+        #         search_string = goal[len(goal) - len(iterations_matching_digits) - 1:]
                 
-                search_string = instructions[len(instructions) - len(iterations_matching_digits) - 1:]
+        #         program.process_while_output_matches_until_halted(search_string)
                 
-                while not program.is_halted() and ",".join(map(str,search_string)).startswith(",".join(program.output)):
-                    program.process()
-                
-                if ",".join(map(str,search_string)) == ",".join(program.output):
-                    iterations_matching_digits.append(iteration)
-                    iteration = iteration * 8
-                    max_iterations = iteration * 8
+        #         if search_string == program.output:
+        #             iterations_matching_digits.append(iteration)
+        #             iteration = iteration * 8
+        #             max_iterations = iteration * 9
 
-                result = ",".join(program.output)
-                if(len(result) >= max_length):
-                    print(f"{iteration} ({((iteration) / (max_iterations))*100:.3f}%): {result}")
-                    max_length = len(result)
+        #         result = program.output
+        #         if(len(result) >= max_length):
+        #             print(f"{iteration} ({((iteration) / (max_iterations))*100:.3f}%): {self.format_number_list(result)}")
+        #             max_length = len(result)
                     
-            if iteration > max_iterations:
-                print(f"Max iterations reached: {iteration}")
-                # continue
-            
-            all_historic_iterations += iterations_matching_digits
-            
-            if iteration < lowest_value:
-                lowest_value = iteration
+        #     if iteration > max_iterations:
+        #         print(f"Max iterations reached: {iteration}")
+        #         # continue
+                        
+        #     if iteration < lowest_value:
+        #         lowest_value = iteration
     
-        return lowest_value
-           
+        return result
+    
+    def find_next_digit(self, digits: List[int], digit_index: int, from_iteration: int, to_iteration: int, registerB: Register, registerC: Register, instructions: List[Instruction]):
+        if digit_index < 0:
+            raise Exception("Went past first digit without stopping")
+        
+        search_digits = digits[digit_index:]
+        
+        matching_iterations = []
+        
+        print(f"Searching for {search_digits} from {from_iteration} to {to_iteration}")
+        
+        for iteration in range(from_iteration, to_iteration):
+            program = Program(Register("A", iteration), registerB, registerC, instructions)
             
+            program.process_while_output_matches_until_halted(search_digits)
+            
+            if search_digits == program.output:
+                print(f"{iteration}: {self.format_number_list(program.output)}")
+                
+                if digit_index - 1 < 0:
+                    return iteration
+                
+                next_digit_iteration = self.find_next_digit(
+                    digits=digits, 
+                    digit_index=digit_index - 1, 
+                    from_iteration=iteration * 8 + 1, 
+                    to_iteration=iteration * 9 + 1, 
+                    registerB=registerB.copy(), 
+                    registerC=registerC.copy(), 
+                    instructions=instructions)
+                
+                if next_digit_iteration != -1:
+                    return next_digit_iteration
+
+        print("No matching iterations found")
+        return -1
+        
+        # print(f"Found {len(matching_iterations)} matching iterations: {matching_iterations}")
+        # for iteration in matching_iterations:
+        #     program = Program(Register("A", iteration), registerB.copy(), registerC.copy(), instructions)
+        #     program.process_while_output_matches_until_halted(search_digits)
+        #     print(f"{iteration}: {self.format_number_list(program.output)}")
+            
+
+            
+    
+    
+    @staticmethod
+    def format_number_list(numbers: List[int]):
+        return ",".join(map(str, numbers))
     
     def get_row_elements(self, input: str) -> Tuple[List[Register], List[Instruction]]:
         regsiter_block, instruction_block = input.split("\n\n")[:2]
